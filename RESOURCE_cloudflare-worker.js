@@ -1,11 +1,19 @@
 export default {
   async fetch(request, env) {
-    if (request.method !== "POST") {
-      return new Response("Only POST allowed", { status: 405 });
+    const { messages } = await request.json();
+    
+    const lastUser = messages[messages.length - 1].content.toLowerCase();
+    const allowed = ["l'oreal", "loreal", "makeup", "skincare", "haircare", "beauty"];
+
+    if (!allowed.some(word => lastUser.includes(word))) {
+      return new Response(JSON.stringify({
+        reply: "I can only answer questions about L'Oréal products, beauty routines, skincare, makeup, haircare, and fragrances."
+      }), {
+        headers: { "Content-Type": "application/json" }
+      });
     }
 
-    const { messages } = await request.json();
-
+    // ⭐ After this point, the question is allowed → call OpenAI
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
